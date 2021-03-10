@@ -1,7 +1,7 @@
 import Vue from 'vue'
 import App from './App.vue'
 import store from './store'
-import router from './router/router.js'
+import router from './router'
 import plugins from '@/plugins'
 import { ValidationProvider, ValidationObserver, configure, extend } from 'vee-validate'
 import { loadVeeValidateExtend } from "./plugins/vee-validate"

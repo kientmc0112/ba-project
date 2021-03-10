@@ -1,64 +1,45 @@
 import Vue from "vue";
-import Meta from "vue-meta";
+// import Meta from "vue-meta";
 import Router from "vue-router";
-import routes from "./routers";
-import middlewareAuth from "./middleware/auth";
+import routes from "./router";
 
-Vue.use(Meta);
-Vue.use(Router);
+Vue.use(Router)
 
 const router = new Router({
-  mode: "history",
-  routes
-});
-
-/**
- * Global middlware
- *
- * @return {Array}
- */
-function globalMiddleware() {
-  return [middlewareAuth];
-}
-
-/**
- * Each a middleware
- *
- * @return {void}
- */
-function nextFactory(context, middleware, index) {
-  const subsequentMiddleware = middleware[index];
-  if (!subsequentMiddleware) return context.next;
-
-  return (...parameters) => {
-    context.next(...parameters);
-    const nextMiddleware = nextFactory(context, middleware, index + 1);
-    subsequentMiddleware({ ...context, next: nextMiddleware });
-  };
-}
+    mode: 'history',
+    routes: routes
+})
 
 router.beforeEach((to, from, next) => {
-  var middleware = null;
-  var routeMiddleware = null;
-
-  if (to.meta.middleware) {
-    routeMiddleware = Array.isArray(to.meta.middleware)
-      ? to.meta.middleware
-      : [to.meta.middleware];
+  if (!to.meta.middleware) {
+    return next()
   }
-  middleware = routeMiddleware
-    ? globalMiddleware().concat(routeMiddleware)
-    : globalMiddleware();
-
-  if (middleware.length > 0) {
-    const context = { to, from, next, router };
-    const nextMiddleware = nextFactory(context, middleware, 1);
-
-    return middleware[0]({ ...context, next: nextMiddleware });
+  const middleware = to.meta.middleware
+  const context = {
+    to,
+    from,
+    next
   }
 
-  return next();
-});
+  return middleware[0]({
+    ...context,
+    next: middlewarePipeline(context, middleware, 1)
+  })
+})
 
-
-export default router;
+function middlewarePipeline (context, middleware, index) {
+  const nextMiddleware = middleware[index]
+  
+  if (!nextMiddleware) {
+    return context.next
+  }
+  
+  return () => {
+    const nextPipeline = middlewarePipeline(
+      context, middleware, index + 1
+    )
+    nextMiddleware({ ...context, next: nextPipeline })
+  }
+}
+  
+export default router

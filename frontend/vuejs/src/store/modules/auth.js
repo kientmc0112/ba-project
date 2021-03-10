@@ -7,7 +7,7 @@ import * as types from "../mutation-types"
  * Avoid having more than one instance of an object.
  */
 export const state = {
-  token: Cookies.get("ecs_user_jwt_token"),
+  token: Cookies.get("ba_project_jwt_token"),
   account: []
 };
 
